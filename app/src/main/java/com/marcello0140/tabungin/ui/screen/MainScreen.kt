@@ -31,11 +31,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,8 +44,9 @@ import androidx.navigation.compose.rememberNavController
 import com.marcello0140.tabungin.data.WishListRepository
 import com.marcello0140.tabungin.model.WishList
 import com.marcello0140.tabungin.navigation.Screen
+import com.marcello0140.tabungin.ui.components.DialogTambahWishlist
 import com.marcello0140.tabungin.util.ViewModelFactory
-import com.marcello0140.tabungin.viewmodel.MainViewModel
+import com.marcello0140.tabungin.ui.viewmodel.MainViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,29 +54,27 @@ import com.marcello0140.tabungin.viewmodel.MainViewModel
 fun MainScreen(
     navController: NavHostController
 ) {
+    val repository = WishListRepository()
+    val viewModel: MainViewModel = viewModel(factory = ViewModelFactory(repository))
+    val wishList by viewModel.wishList.collectAsState()
+
+    var showAddWishlistDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("TabungIn") },
-            )
+            TopAppBar(title = { Text("TabungIn") })
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    // TODO: Aksi saat FAB diklik
-                },
-                modifier = Modifier.padding(16.dp) // Memberikan jarak agar tidak terlalu menempel ke pinggir layar
+                onClick = { showAddWishlistDialog = true },
+                modifier = Modifier.padding(16.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Tambah",
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(Icons.Default.Add, contentDescription = "Tambah")
                     Text(
                         text = "Tambah Tabungan",
                         style = MaterialTheme.typography.bodyMedium,
@@ -85,27 +84,34 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        MainScreenContent(Modifier.padding(innerPadding), navController)
+        MainScreenContent(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            wishList = wishList
+        )
+    }
+
+    if (showAddWishlistDialog) {
+        DialogTambahWishlist(
+            onDismiss = { showAddWishlistDialog = false },
+            onConfirm = { name, target ->
+                viewModel.addWishlist(name, target)
+                showAddWishlistDialog = false
+            }
+        )
     }
 }
 
 @Composable
 fun MainScreenContent(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    wishList: List<WishList>
 ) {
-    val context = LocalContext.current
-    val repository = WishListRepository()
-    val viewModel: MainViewModel = viewModel(factory = ViewModelFactory(repository))
-    val wishList by viewModel.wishList.collectAsState()
-
-
-
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Belum Tercapai", "Tercapai")
 
     Column(modifier = modifier.padding(16.dp)) {
-
         TabRow(selectedTabIndex = selectedTabIndex) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -123,10 +129,8 @@ fun MainScreenContent(
         }
 
         if (filteredList.isEmpty()) {
-            // 🌟 Tampilan kosong jika tidak ada data
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(
@@ -140,10 +144,7 @@ fun MainScreenContent(
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        text = "Belum ada wishlist",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Text("Belum ada wishlist", style = MaterialTheme.typography.bodyMedium)
                 }
             }
         } else {
@@ -152,14 +153,11 @@ fun MainScreenContent(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredList.size) { index ->
-                    WishListItem(filteredList[index], onClick = {
-                        // Navigasi ke DetailScreen dengan id
+                    WishListItem(filteredList[index]) {
                         navController.navigate(Screen.Detail.navigationWithId(filteredList[index].id))
-                    })
+                    }
                 }
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
@@ -174,13 +172,13 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp)
-            .clickable(onClick = onClick), // Tambah aksi onClick
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.elevatedCardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge)
                 Text("Rp ${item.targetAmount}", style = MaterialTheme.typography.bodyMedium)
@@ -188,7 +186,7 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -198,8 +196,6 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
         }
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable

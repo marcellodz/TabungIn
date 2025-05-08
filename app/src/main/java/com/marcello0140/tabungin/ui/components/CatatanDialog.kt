@@ -1,19 +1,13 @@
 package com.marcello0140.tabungin.ui.components
 
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -32,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
@@ -46,66 +39,42 @@ import java.util.Locale
 
 
 @Composable
-fun DialogTambahCatatan(
+fun DialogTambahWishlist(
     onDismiss: () -> Unit,
-    onConfirm: (Int, Boolean) -> Unit,
-    currentAmount: Int // Menambahkan currentAmount untuk validasi pengurangan
+    onConfirm: (String, Int) -> Unit
 ) {
-    var nominal by remember { mutableStateOf("") }
-    var isPenambahan by remember { mutableStateOf(true) }
-
-    // Mengambil context menggunakan LocalContext
-    val context = LocalContext.current
+    var name by remember { mutableStateOf("") }
+    var targetAmount by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tambah Catatan Tabungan") },
+        title = { Text("Tambah Wishlist Baru") },
         text = {
             Column {
                 OutlinedTextField(
-                    value = nominal,
-                    onValueChange = {
-                        if (it.all { char -> char.isDigit() }) {
-                            nominal = it
-                        }
-                    },
-                    label = { Text("Nominal") },
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nama Wishlist") },
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Segmented button untuk Penambahan/Pengurangan
-                SegmentedButton(
-                    selected = isPenambahan,
-                    onSelectedChange = { isPenambahan = it }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = targetAmount,
+                    onValueChange = {
+                        if (it.all { c -> c.isDigit() }) targetAmount = it
+                    },
+                    label = { Text("Target Tabungan") },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    // Validasi input
-                    val nominalValue = nominal.toIntOrNull() ?: 0
-
-                    // Sanity Check
-                    when {
-                        nominalValue <= 0 -> {
-                            Toast.makeText(context, "Nominal harus lebih besar dari 0", Toast.LENGTH_SHORT).show()
-                        }
-                        !isPenambahan && nominalValue > currentAmount -> {
-                            Toast.makeText(context, "Pengurangan tidak boleh lebih besar dari jumlah tabungan", Toast.LENGTH_SHORT).show()
-                        }
-                        else -> {
-                            // Validasi lolos, kirim data ke onConfirm
-                            onConfirm(nominalValue, isPenambahan)
-                            onDismiss() // Tutup dialog setelah konfirmasi
-                        }
-                    }
-                },
-            ) {
-                Icon(Icons.Default.Save, contentDescription = "Save")
-                Spacer(modifier = Modifier.width(4.dp))
+            TextButton(onClick = {
+                val amountInt = targetAmount.toIntOrNull() ?: 0
+                if (name.isNotBlank() && amountInt > 0) {
+                    onConfirm(name, amountInt)
+                }
+            }) {
                 Text("Simpan")
             }
         },
@@ -118,13 +87,158 @@ fun DialogTambahCatatan(
 }
 
 
+@Composable
+fun DialogEditWishlist(
+    initialName: String,
+    initialTargetAmount: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, Int) -> Unit
+) {
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    var targetAmount by remember(initialTargetAmount) { mutableStateOf(initialTargetAmount) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Wishlist") },
+        text = {
+            Column {
+                // Input nama wishlist
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nama Wishlist") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Input target amount (angka)
+                OutlinedTextField(
+                    value = targetAmount,
+                    onValueChange = {
+                        if (it.all { c -> c.isDigit() }) targetAmount = it
+                    },
+                    label = { Text("Target Amount") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val targetValue = targetAmount.toIntOrNull() ?: 0
+                if (name.isNotBlank() && targetValue > 0) {
+                    onConfirm(name, targetValue)
+                    onDismiss()
+                }
+            }) {
+                Text("Simpan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
 
 @Composable
-fun DialogEditCatatan(
+fun DialogDeleteWishlist(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Hapus Wishlist") },
+        text = { Text("Apakah kamu yakin ingin menghapus wishlist ini? Tindakan ini tidak dapat dibatalkan.") },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm()
+                onDismiss()
+            }) {
+                Text("Ya, Hapus", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
+@Composable
+fun DialogTambahRiwayat(
+    onDismiss: () -> Unit,
+    onConfirm: (Int, Boolean) -> Unit,
+    currentAmount: Int,
+    initialNominal: String = "",
+    initialIsPenambahan: Boolean = true
+) {
+    var nominal by remember { mutableStateOf(initialNominal) }
+    var isPenambahan by remember { mutableStateOf(initialIsPenambahan) }
+
+    val context = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tambah / Edit Catatan Tabungan") },
+        text = {
+            Column {
+                // Input nominal angka
+                OutlinedTextField(
+                    value = nominal,
+                    onValueChange = {
+                        if (it.all { c -> c.isDigit() }) nominal = it
+                    },
+                    label = { Text("Nominal") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Pilihan penambahan/pengurangan (segmented button)
+                SegmentedButton(
+                    selected = isPenambahan,
+                    onSelectedChange = { isPenambahan = it }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val nominalValue = nominal.toIntOrNull() ?: 0
+                when {
+                    nominalValue <= 0 -> {
+                        Toast.makeText(context, "Nominal harus lebih besar dari 0", Toast.LENGTH_SHORT).show()
+                    }
+                    !isPenambahan && nominalValue > currentAmount -> {
+                        Toast.makeText(context, "Pengurangan tidak boleh lebih besar dari jumlah tabungan", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        onConfirm(nominalValue, isPenambahan)
+                        onDismiss()
+                    }
+                }
+            }) {
+                Icon(Icons.Default.Save, contentDescription = "Simpan")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Simpan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
+@Composable
+fun DialogRiwayat(
     historyItem: TabunganHistory,
     onDismiss: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onEdit: (historyId: Int) -> Unit,
+    onDelete: (historyId: Int) -> Unit
 ) {
     val isPenambahan = historyItem.isPenambahan
     val nominalColor = if (isPenambahan) Color(0xFF2E7D32) else Color(0xFFC62828)
@@ -132,66 +246,40 @@ fun DialogEditCatatan(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {},
         title = {
-            Text(
-                text = "Detail Catatan",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Text("Detail Catatan", fontWeight = FontWeight.Bold)
         },
         text = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Jenis
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = jenisText,
                     color = nominalColor,
-                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
-
                 Spacer(modifier = Modifier.height(12.dp))
-
-                // Nominal Besar di Tengah
                 Text(
                     text = formatRupiah(historyItem.nominal),
                     color = nominalColor,
-                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Tanggal
                 Text(
                     text = "Tanggal: ${formatDateToReadable(historyItem.tanggal)}",
-                    style = MaterialTheme.typography.bodyMedium,
                     fontStyle = FontStyle.Italic
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Tombol Aksi
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Tombol Edit
-                    TextButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Edit")
-                    }
-
-                    // Tombol Hapus
-                    TextButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Hapus", color = Color.Red)
-                    }
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = { onEdit(historyItem.id) }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Edit")
+                }
+                TextButton(onClick = { onDelete(historyItem.id) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Hapus")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Hapus", color = MaterialTheme.colorScheme.error)
                 }
             }
         },
@@ -202,59 +290,6 @@ fun DialogEditCatatan(
         }
     )
 }
-
-@Composable
-fun SegmentedButton(
-    selected: Boolean,
-    onSelectedChange: (Boolean) -> Unit
-) {
-    Row(
-        Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.primary,
-                RoundedCornerShape(8.dp)
-            )
-    ) {
-        val selectedColor = MaterialTheme.colorScheme.primary
-        val unselectedColor = MaterialTheme.colorScheme.surface
-
-        // Tombol "+"
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .background(if (selected) selectedColor else unselectedColor)
-                .clickable { onSelectedChange(true) }
-                .padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "+",
-                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        // Tombol "–"
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .background(if (!selected) selectedColor else unselectedColor)
-                .clickable { onSelectedChange(false) }
-                .padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "–",
-                color = if (!selected) Color.White else MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-
 
 fun formatDateToReadable(dateString: String): String {
     return try {
@@ -274,7 +309,7 @@ fun PreviewDialogTambahCatatan() {
     val currentAmount by remember { mutableIntStateOf(100000) } // Contoh currentAmount
 
     if (showDialog) {
-        DialogTambahCatatan(
+        DialogTambahRiwayat(
             onDismiss = { showDialog = false },
             onConfirm = { nominal, isPenambahan ->
                 // Handle confirm logic here
@@ -296,10 +331,11 @@ fun Preview() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewDialogEditCatatan() {
+fun PreviewDialogCatatan() {
     MaterialTheme {
-        DialogEditCatatan(
+        DialogRiwayat (
             historyItem = TabunganHistory(
+                id = 1,
                 nominal = 50000,
                 isPenambahan = true,
                 tanggal = "2025-05-08 10:45:00"

@@ -1,4 +1,4 @@
-package com.marcello0140.tabungin.viewmodel
+package com.marcello0140.tabungin.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,4 +22,9 @@ class MainViewModel(private val repository: WishListRepository) : ViewModel() {
         }
     }
 
+    fun addWishlist(name: String, targetAmount: Int) {
+        viewModelScope.launch {
+            repository.addWishList(name, targetAmount)
+        }
+    }
 }
