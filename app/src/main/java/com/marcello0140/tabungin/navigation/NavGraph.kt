@@ -12,42 +12,41 @@ import com.marcello0140.tabungin.data.WishListRepository
 import com.marcello0140.tabungin.ui.screen.DetailScreen
 import com.marcello0140.tabungin.ui.screen.MainScreen
 import com.marcello0140.tabungin.ui.viewmodel.DetailViewModel
+import com.marcello0140.tabungin.ui.viewmodel.MainViewModel
 import com.marcello0140.tabungin.util.ViewModelFactory
 
 @Composable
 fun NavGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    repository: WishListRepository // DI-berikan dari MainActivity
 ) {
-    // Repository dummy; nanti bisa diganti RoomRepo jika sudah pakai database
-    val repository = WishListRepository()
-
     NavHost(
         navController = navController,
         startDestination = Screen.Main.route
     ) {
-        // Screen utama (list semua wishlist)
+        // Main Screen
         composable(Screen.Main.route) {
-            MainScreen(navController)
+            val mainViewModel: MainViewModel = viewModel(factory = ViewModelFactory(repository))
+            MainScreen(
+                navController = navController,
+                viewModel = mainViewModel
+            )
         }
 
-        // Screen detail (dengan argumen id)
+        // Detail Screen
         composable(
             route = Screen.Detail.route,
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: return@composable
+            val id = backStackEntry.arguments?.getLong("id") ?: return@composable
 
-            // Ambil ViewModel khusus untuk detail
-            val detailViewModel: DetailViewModel = viewModel(
-                factory = ViewModelFactory(repository)
-            )
+            val detailViewModel: DetailViewModel = viewModel(factory = ViewModelFactory(repository))
 
-            // Trigger load data saat id berubah
+            // Load data saat ID diterima
             LaunchedEffect(id) {
                 detailViewModel.loadWishListById(id)
             }
 
-            // Tampilkan DetailScreen + navigasi back
             DetailScreen(
                 viewModel = detailViewModel,
                 onNavigateBack = { navController.popBackStack() }

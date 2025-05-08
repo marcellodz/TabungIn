@@ -31,7 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,15 +40,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marcello0140.tabungin.model.TabunganHistory
-import com.marcello0140.tabungin.model.WishList
+import com.marcello0140.tabungin.model.WishListWithHistory
 import com.marcello0140.tabungin.ui.components.DialogDeleteWishlist
 import com.marcello0140.tabungin.ui.components.DialogEditWishlist
 import com.marcello0140.tabungin.ui.components.DialogRiwayat
 import com.marcello0140.tabungin.ui.components.DialogTambahRiwayat
-import com.marcello0140.tabungin.ui.components.formatDateToReadable
 import com.marcello0140.tabungin.ui.viewmodel.DetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,26 +55,21 @@ fun DetailScreen(
     viewModel: DetailViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val wishList = viewModel.wishList
+    val data by viewModel.wishListWithHistory.collectAsState()
+    val wishList = data?.wishList
 
-    // STATE UNTUK MENGELOLA DIALOG YANG AKTIF
-    var showDetailDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
-    var showEditDialog by remember { mutableStateOf(false) }
     var showEditWishlistDialog by remember { mutableStateOf(false) }
     var showDeleteWishlistDialog by remember { mutableStateOf(false) }
     var selectedHistoryItem by remember { mutableStateOf<TabunganHistory?>(null) }
-
-    LaunchedEffect(showDetailDialog) {
-        println("Show Detail Dialog: $showDetailDialog, Selected Item: $selectedHistoryItem")
-    }
+    var showEditHistoryDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(wishList?.name ?: "Loading...") },
                 navigationIcon = {
-                    IconButton(onClick = { onNavigateBack() }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -98,26 +91,22 @@ fun DetailScreen(
                     Icon(Icons.Filled.Add, contentDescription = "Tambah Catatan")
                 }
             }
-        },
-        content = { innerPadding ->
-            if (wishList == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                DetailScreenContent(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(16.dp),
-                    wishList = wishList,
-                    onHistoryItemClick = { item ->
-                        selectedHistoryItem = item
-                        showDetailDialog = true
-                    }
-                )
-            }
         }
-    )
+    ) { innerPadding ->
+        if (wishList == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            DetailScreenContent(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                wishList = data!!,
+                onHistoryItemClick = { selectedHistoryItem = it }
+            )
+        }
+    }
 
     if (wishList != null) {
         if (showEditWishlistDialog) {
@@ -126,7 +115,7 @@ fun DetailScreen(
                 initialTargetAmount = wishList.targetAmount.toString(),
                 onDismiss = { showEditWishlistDialog = false },
                 onConfirm = { newName, newTarget ->
-                    viewModel.updateWishlist(newName, newTarget)
+                    viewModel.updateWishlist(wishList.copy(name = newName, targetAmount = newTarget))
                     showEditWishlistDialog = false
                 }
             )
@@ -136,7 +125,7 @@ fun DetailScreen(
             DialogDeleteWishlist(
                 onDismiss = { showDeleteWishlistDialog = false },
                 onConfirm = {
-                    viewModel.deleteWishlist(wishList.id)
+                    viewModel.deleteWishlist(wishList)
                     onNavigateBack()
                     showDeleteWishlistDialog = false
                 }
@@ -147,65 +136,62 @@ fun DetailScreen(
             DialogTambahRiwayat(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { nominal, isPenambahan ->
-                    viewModel.addHistoryItem(nominal, isPenambahan)
+                    viewModel.addHistoryItem(wishList.id, nominal, isPenambahan)
                     showAddDialog = false
                 },
                 currentAmount = wishList.currentAmount
             )
         }
+    }
 
-        if (showDetailDialog && selectedHistoryItem != null) {
-            DialogRiwayat(
-                historyItem = selectedHistoryItem!!,
-                onDismiss = { showDetailDialog = false },
-                onEdit = {
-                    showDetailDialog = false
-                    showEditDialog = true
-                },
-                onDelete = { id ->
-                    viewModel.deleteHistoryItem(id)
-                    showDetailDialog = false
-                }
-            )
-        }
+    selectedHistoryItem?.let { history ->
+        DialogRiwayat(
+            historyItem = history,
+            onDismiss = { selectedHistoryItem = null },
+            onEdit = { showEditHistoryDialog = true },
+            onDelete = {
+                viewModel.deleteHistoryItem(history)
+                selectedHistoryItem = null
+            }
+        )
+    }
 
-        if (showEditDialog && selectedHistoryItem != null) {
-            DialogTambahRiwayat(
-                initialNominal = selectedHistoryItem!!.nominal.toString(),
-                initialIsPenambahan = selectedHistoryItem!!.isPenambahan,
-                onDismiss = { showEditDialog = false },
-                onConfirm = { nominal, isPenambahan ->
-                    viewModel.editHistoryItem(selectedHistoryItem!!.id, nominal, isPenambahan)
-                    showEditDialog = false
-                },
-                currentAmount = selectedHistoryItem!!.nominal
-            )
-        }
+    if (showEditHistoryDialog && selectedHistoryItem != null) {
+        DialogTambahRiwayat(
+            initialNominal = selectedHistoryItem!!.nominal.toString(),
+            initialIsPenambahan = selectedHistoryItem!!.isPenambahan,
+            onDismiss = { showEditHistoryDialog = false },
+            onConfirm = { nominal, isPenambahan ->
+                viewModel.editHistoryItem(selectedHistoryItem!!, nominal, isPenambahan)
+                showEditHistoryDialog = false
+            },
+            currentAmount = selectedHistoryItem!!.nominal
+        )
     }
 }
 
 @Composable
 fun DetailScreenContent(
     modifier: Modifier = Modifier,
-    wishList: WishList,
+    wishList: WishListWithHistory,
     onHistoryItemClick: (TabunganHistory) -> Unit
 ) {
+    val wish = wishList.wishList
+    val histories = wishList.histories
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         item {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text("📦", style = MaterialTheme.typography.displayMedium)
             }
         }
-
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+        item { Spacer(modifier = Modifier.height(24.dp)) }
 
         item {
             Card(
@@ -214,19 +200,17 @@ fun DetailScreenContent(
                 elevation = CardDefaults.elevatedCardElevation(4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Target: ${formatRupiah(wishList.targetAmount)}")
-                    val progress =
-                        (wishList.currentAmount.toFloat() / wishList.targetAmount).coerceIn(0f, 1f)
+                    val progress = (wish.currentAmount.toFloat() / wish.targetAmount).coerceIn(0f, 1f)
+                    Text("Target: ${formatRupiah(wish.targetAmount)}")
                     Text("Progress: ${(progress * 100).toInt()}%")
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp)
-                            .padding(top = 8.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Tanggal Dibuat: ${wishList.createdAt}")
+                    Text("Tanggal Dibuat: ${wish.createdAt}")
                 }
             }
         }
@@ -244,43 +228,24 @@ fun DetailScreenContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
-                            Text("Terkumpul")
-                            Text(formatRupiah(wishList.currentAmount), fontWeight = FontWeight.Bold)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("Kekurangan")
-                            Text(
-                                formatRupiah(wishList.targetAmount - wishList.currentAmount),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Column { Text("Terkumpul"); Text(formatRupiah(wish.currentAmount), fontWeight = FontWeight.Bold) }
+                        Column(horizontalAlignment = Alignment.End) { Text("Kekurangan"); Text(formatRupiah(wish.targetAmount - wish.currentAmount), fontWeight = FontWeight.Bold) }
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (wishList.history.isNotEmpty()) {
+                    if (histories.isNotEmpty()) {
                         Text("Riwayat Tabungan")
-                        Spacer(Modifier.padding(8.dp))
-                        wishList.history.forEachIndexed { index, item ->
-                            HistoryItem(
-                                historyItem = item,
-                                onClick = { onHistoryItemClick(item) }
-                            )
-                            if (index != wishList.history.lastIndex) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        histories.forEachIndexed { index, item ->
+                            HistoryItem(historyItem = item, onClick = { onHistoryItemClick(item) })
+                            if (index != histories.lastIndex) {
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             }
                         }
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Belum ada riwayat tabungan",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("Belum ada riwayat tabungan", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -302,32 +267,23 @@ fun HistoryItem(historyItem: TabunganHistory, onClick: () -> Unit) {
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
+                Text(historyItem.tanggal, style = MaterialTheme.typography.bodySmall)
                 Text(
-                    text = formatDateToReadable(historyItem.tanggal),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (historyItem.isPenambahan) "Penambahan" else "Pengurangan",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = color
+                    if (historyItem.isPenambahan) "Penambahan" else "Pengurangan",
+                    color = color,
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
-
             Text(
-                text = "$sign ${formatRupiah(historyItem.nominal)}",
+                "$sign ${formatRupiah(historyItem.nominal)}",
                 color = color,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }
-
-        // Divider tipis di bawah setiap item
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
             thickness = 0.8.dp,
@@ -338,42 +294,4 @@ fun HistoryItem(historyItem: TabunganHistory, onClick: () -> Unit) {
 
 fun formatRupiah(amount: Int): String {
     return "Rp %,d".format(amount).replace(',', '.')
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDetailScreen() {
-    // Dummy ViewModel atau hardcode data manual
-    val dummyWishList = WishList(
-        id = 1,
-        name = "Beli iPhone 15",
-        targetAmount = 20000000,
-        currentAmount = 5000000,
-        createdAt = "01 Jan 2025",
-        history = listOf(
-            TabunganHistory(1, "02 Jan 2025", 2000000, true),
-            TabunganHistory(2, "15 Jan 2025", 1000000, true),
-            TabunganHistory(3, "01 Feb 2025", 1000000, false)
-        )
-    )
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { }) {
-                Icon(Icons.Filled.Add, contentDescription = "Tambah")
-            }
-        },
-        topBar = { /* optional */ },
-        content = { innerPadding ->
-            // Panggil konten utama dummy di sini
-            DetailScreenContent(
-                wishList = dummyWishList,
-                onHistoryItemClick = { println("Clicked history item: ${it.id}") }
-            )
-            Column(modifier = Modifier.padding(innerPadding)) {
-                Text("Preview Content")
-            }
-        }
-    )
 }

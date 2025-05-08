@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import com.marcello0140.tabungin.data.WishListRepository
+import com.marcello0140.tabungin.database.DatabaseInstance
 import com.marcello0140.tabungin.navigation.NavGraph
 import com.marcello0140.tabungin.ui.theme.TabungInTheme
 
@@ -22,8 +24,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    val db = DatabaseInstance.getDatabase(this)
+                    val repository = WishListRepository(
+                        wishListDao = db.wishListDao(),
+                        historyDao = db.historyDao()
+                    )
                     val navController = rememberNavController()
-                    NavGraph(navController = navController)
+                    NavGraph(navController = navController, repository = repository)
                 }
             }
         }

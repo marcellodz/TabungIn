@@ -271,12 +271,12 @@ fun DialogRiwayat(
         },
         confirmButton = {
             Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = { onEdit(historyItem.id) }) {
+                TextButton(onClick = { onEdit(historyItem.id.toInt()) }) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit")
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Edit")
                 }
-                TextButton(onClick = { onDelete(historyItem.id) }) {
+                TextButton(onClick = { onDelete(historyItem.id.toInt()) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Hapus")
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Hapus", color = MaterialTheme.colorScheme.error)
@@ -329,20 +329,20 @@ fun Preview() {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewDialogCatatan() {
-    MaterialTheme {
-        DialogRiwayat (
-            historyItem = TabunganHistory(
-                id = 1,
-                nominal = 50000,
-                isPenambahan = true,
-                tanggal = "2025-05-08 10:45:00"
-            ),
-            onDismiss = {},
-            onEdit = { println("Edit clicked") },
-            onDelete = { println("Delete clicked") }
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewDialogCatatan() {
+//    MaterialTheme {
+//        DialogRiwayat (
+//            historyItem = TabunganHistory(
+//                id = 1,
+//                nominal = 50000,
+//                isPenambahan = true,
+//                tanggal = "2025-05-08 10:45:00"
+//            ),
+//            onDismiss = {},
+//            onEdit = { println("Edit clicked") },
+//            onDelete = { println("Delete clicked") }
+//        )
+//    }
+//}

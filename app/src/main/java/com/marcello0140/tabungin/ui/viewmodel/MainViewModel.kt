@@ -1,30 +1,32 @@
 package com.marcello0140.tabungin.ui.viewmodel
 
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marcello0140.tabungin.data.WishListRepository
-import com.marcello0140.tabungin.model.WishList
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.marcello0140.tabungin.model.WishListWithHistory
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
-class MainViewModel(private val repository: WishListRepository) : ViewModel() {
+class MainViewModel(
+    private val repository: WishListRepository
+) : ViewModel() {
 
-    private val _wishList = MutableStateFlow<List<WishList>>(emptyList())
-    val wishList: StateFlow<List<WishList>> = _wishList
+    val wishListWithHistories: StateFlow<List<WishListWithHistory>> =
+        repository.getAllWishLists()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    init {
+    fun addWishlist(name: String, targetAmount: Int, createdAt: String = getTodayDate()) {
         viewModelScope.launch {
-            repository.getAllWishList().collectLatest {
-                _wishList.value = it
-            }
+            repository.addWishList(name, targetAmount, createdAt)
         }
     }
 
-    fun addWishlist(name: String, targetAmount: Int) {
-        viewModelScope.launch {
-            repository.addWishList(name, targetAmount)
-        }
+    private fun getTodayDate(): String {
+        return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
     }
 }
