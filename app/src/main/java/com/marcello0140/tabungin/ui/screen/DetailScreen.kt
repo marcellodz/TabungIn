@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.marcello0140.tabungin.ui.screen
 
 import androidx.compose.foundation.clickable
@@ -32,6 +30,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,14 +42,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marcello0140.tabungin.model.TabunganHistory
 import com.marcello0140.tabungin.model.WishList
+import com.marcello0140.tabungin.ui.components.DialogTambahCatatan
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     wishList: WishList,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onAddNote: (nominal: Int, isPenambahan: Boolean) -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedHistoryItem by remember { mutableStateOf<TabunganHistory?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,25 +76,37 @@ fun DetailScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* TODO: Tambah catatan */ }) {
+            FloatingActionButton(onClick = { showDialog = true }) {
                 Icon(Icons.Filled.Add, contentDescription = "Tambah Catatan")
-                Modifier.padding(16.dp)
             }
         },
         content = { innerPadding ->
             DetailScreenContent(Modifier.padding(innerPadding).padding(16.dp), wishList)
         }
     )
+
+    if (showDialog) {
+        DialogTambahCatatan(
+            onDismiss = { showDialog = false },
+            onConfirm = { nominal, isPenambahan ->
+                onAddNote(nominal, isPenambahan)
+                showDialog = false
+            },
+            currentAmount = 700000
+        )
+    }
 }
 
 @Composable
 fun DetailScreenContent(
     modifier: Modifier = Modifier,
-    wishList: WishList) {
+    wishList: WishList
+) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
+
         // Gambar Placeholder
         item {
             Box(
@@ -134,12 +154,12 @@ fun DetailScreenContent(
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
 
-// Informasi Terkumpul, Kekurangan, dan Riwayat Tabungan
+        // Informasi Terkumpul, Kekurangan, dan Riwayat Tabungan
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp).height(330.dp),
+                    .padding(horizontal = 16.dp),
                 shape = MaterialTheme.shapes.medium,
                 elevation = CardDefaults.elevatedCardElevation(4.dp)
             ) {
@@ -178,23 +198,22 @@ fun DetailScreenContent(
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                }
 
-                        wishList.history.forEachIndexed { index, item ->
-                            CatatanItem(historyItem = item)
+                    wishList.history.forEachIndexed { index, item ->
+                        CatatanItem(historyItem = item)
 
-                            if (index != wishList.history.lastIndex) {
-                                HorizontalDivider(
-                                    color = Color.LightGray,
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                )
-                            }
+                        if (index != wishList.history.lastIndex) {
+                            HorizontalDivider(
+                                color = Color.LightGray,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
                         }
                     }
                 }
             }
         }
-
+    }
+}
 
 @Composable
 fun CatatanItem(historyItem: TabunganHistory) {
@@ -205,7 +224,8 @@ fun CatatanItem(historyItem: TabunganHistory) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { /* Detail riwayat */ }
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .height(26.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = historyItem.tanggal, style = MaterialTheme.typography.bodyMedium)
@@ -217,8 +237,6 @@ fun CatatanItem(historyItem: TabunganHistory) {
         )
     }
 }
-
-
 
 fun formatRupiah(amount: Int): String {
     return "Rp %,d".format(amount).replace(',', '.')
@@ -243,6 +261,10 @@ fun PreviewDetailScreen() {
         wishList = dummyWishList,
         onBackClick = {},
         onEditClick = {},
-        onDeleteClick = {}
+        onDeleteClick = {},
+        onAddNote = { nominal, isPenambahan ->
+            // Handle Add Note action here, with nominal and isPenambahan
+            println("Nominal: $nominal, Penambahan: $isPenambahan")
+        }
     )
 }

@@ -2,14 +2,12 @@ package com.marcello0140.tabungin.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marcello0140.tabungin.data.WishListRepository
-import com.marcello0140.tabungin.model.WishList
 import com.marcello0140.tabungin.ui.screen.DetailScreen
 import com.marcello0140.tabungin.ui.screen.MainScreen
 
@@ -42,7 +40,11 @@ fun NavGraph(
                     wishList = it,
                     onBackClick = { navController.popBackStack() },
                     onEditClick = { /* Handle edit */ },
-                    onDeleteClick = { /* Handle delete */ }
+                    onDeleteClick = { /* Handle delete */ },
+                    onAddNote = { nominal, isPenambahan ->
+                        // Handle the Add Note action with nominal and isPenambahan
+                        println("Nominal: $nominal, Penambahan: $isPenambahan")
+                    }
                 )
             }
         }
