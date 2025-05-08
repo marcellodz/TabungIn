@@ -28,18 +28,24 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.marcello0140.tabungin.data.WishListRepository
 import com.marcello0140.tabungin.model.WishList
 import com.marcello0140.tabungin.navigation.Screen
+import com.marcello0140.tabungin.util.ViewModelFactory
+import com.marcello0140.tabungin.viewmodel.MainViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,11 +94,12 @@ fun MainScreenContent(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
-    // Data Dummy
-    val wishListDummy = listOf(
-        WishList( id = 1, name = "Marcell", targetAmount = 3_000_000, currentAmount = 3000000),
-        WishList( id = 2, name = "Marcell", targetAmount = 3_000_000, currentAmount = 30000)
-    )
+    val context = LocalContext.current
+    val repository = WishListRepository()
+    val viewModel: MainViewModel = viewModel(factory = ViewModelFactory(repository))
+    val wishList by viewModel.wishList.collectAsState()
+
+
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = listOf("Belum Tercapai", "Tercapai")
@@ -110,9 +117,9 @@ fun MainScreenContent(
         }
 
         val filteredList = if (selectedTabIndex == 0) {
-            wishListDummy.filter { it.currentAmount < it.targetAmount }
+            wishList.filter { it.currentAmount < it.targetAmount }
         } else {
-            wishListDummy.filter { it.currentAmount >= it.targetAmount }
+            wishList.filter { it.currentAmount >= it.targetAmount }
         }
 
         if (filteredList.isEmpty()) {
