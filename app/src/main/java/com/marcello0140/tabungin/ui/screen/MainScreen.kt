@@ -1,10 +1,13 @@
 package com.marcello0140.tabungin.ui.screen
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.outlined.SentimentDissatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,20 +23,33 @@ import com.marcello0140.tabungin.model.WishListWithHistory
 import com.marcello0140.tabungin.navigation.Screen
 import com.marcello0140.tabungin.ui.components.DialogTambahWishlist
 import com.marcello0140.tabungin.ui.viewmodel.MainViewModel
+import com.marcello0140.tabungin.ui.viewmodel.ThemeViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    themeViewModel: ThemeViewModel
 ) {
-    val wishLists by viewModel.wishListWithHistory.collectAsState()
-
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState(initial = isSystemInDarkTheme())
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("TabungIn") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("TabungIn") },
+                actions = {
+                    IconButton(onClick = { themeViewModel.toggleTheme() }) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Default.WbSunny else Icons.Default.NightsStay,
+                            contentDescription = if (isDarkMode) "Switch to Light Mode" else "Switch to Dark Mode"
+                        )
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Tabungan")
@@ -43,7 +59,7 @@ fun MainScreen(
         MainScreenContent(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            wishListWithHistory = wishLists
+            wishListWithHistory = viewModel.wishListWithHistory.collectAsState().value
         )
     }
 

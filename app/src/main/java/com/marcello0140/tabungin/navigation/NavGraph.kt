@@ -9,29 +9,35 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marcello0140.tabungin.data.WishListRepository
+import com.marcello0140.tabungin.datastore.PreferenceManager
 import com.marcello0140.tabungin.ui.screen.DetailScreen
 import com.marcello0140.tabungin.ui.screen.MainScreen
 import com.marcello0140.tabungin.ui.viewmodel.DetailViewModel
 import com.marcello0140.tabungin.ui.viewmodel.MainViewModel
+import com.marcello0140.tabungin.ui.viewmodel.ThemeViewModel
 import com.marcello0140.tabungin.util.ViewModelFactory
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    repository: WishListRepository // DI-berikan dari MainActivity
+    repository: WishListRepository, // DI-berikan dari MainActivity
+    preferenceManager: PreferenceManager
 ) {
     NavHost(
         navController = navController,
         startDestination = Screen.Main.route
     ) {
-        // Main Screen
         composable(Screen.Main.route) {
-            val mainViewModel: MainViewModel = viewModel(factory = ViewModelFactory(repository))
+            val mainViewModel: MainViewModel = viewModel(factory = ViewModelFactory(repository, preferenceManager))
+            val themeViewModel: ThemeViewModel = viewModel(factory = ViewModelFactory(repository, preferenceManager))
+
             MainScreen(
                 navController = navController,
-                viewModel = mainViewModel
+                viewModel = mainViewModel,
+                themeViewModel = themeViewModel
             )
         }
+
 
         // Detail Screen
         composable(
@@ -40,7 +46,7 @@ fun NavGraph(
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getLong("id") ?: return@composable
 
-            val detailViewModel: DetailViewModel = viewModel(factory = ViewModelFactory(repository))
+            val detailViewModel: DetailViewModel = viewModel(factory = ViewModelFactory(repository, preferenceManager))
 
             // Load data saat ID diterima
             LaunchedEffect(id) {
