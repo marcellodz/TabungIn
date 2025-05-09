@@ -34,7 +34,6 @@ fun SegmentedButton(
         val selectedColor = MaterialTheme.colorScheme.primary
         val unselectedColor = MaterialTheme.colorScheme.surface
 
-        // Tombol "+"
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -50,7 +49,6 @@ fun SegmentedButton(
             )
         }
 
-        // Tombol "–"
         Box(
             modifier = Modifier
                 .weight(1f)

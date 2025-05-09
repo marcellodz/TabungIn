@@ -1,5 +1,6 @@
 package com.marcello0140.tabungin.navigation
 
+import DetailScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -10,7 +11,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marcello0140.tabungin.data.WishListRepository
 import com.marcello0140.tabungin.datastore.PreferenceManager
-import com.marcello0140.tabungin.ui.screen.DetailScreen
 import com.marcello0140.tabungin.ui.screen.MainScreen
 import com.marcello0140.tabungin.ui.viewmodel.DetailViewModel
 import com.marcello0140.tabungin.ui.viewmodel.MainViewModel

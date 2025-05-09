@@ -1,5 +1,3 @@
-package com.marcello0140.tabungin.ui.screen
-
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.marcello0140.tabungin.R
 import com.marcello0140.tabungin.model.TabunganHistory
 import com.marcello0140.tabungin.model.WishList
 import com.marcello0140.tabungin.ui.components.*
@@ -47,19 +47,19 @@ fun DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(wishList?.name ?: "Loading...") },
+                title = { Text(wishList?.name ?: stringResource(R.string.loading)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     if (wishList != null) {
                         IconButton(onClick = { showEditWishlistDialog = true }) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Edit Wishlist")
+                            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_wishlist))
                         }
                         IconButton(onClick = { showDeleteWishlistDialog = true }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Delete Wishlist")
+                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete_wishlist))
                         }
                     }
                 }
@@ -68,17 +68,17 @@ fun DetailScreen(
         floatingActionButton = {
             if (wishList != null) {
                 FloatingActionButton(onClick = { showAddDialog = true }) {
-                    Row(verticalAlignment = Alignment.CenterVertically,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 12.dp)
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Tambah Catatan")
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_saving))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Tambah Tabungan")
+                        Text(stringResource(R.string.add_saving))
                     }
                 }
             }
         }
-
     ) { innerPadding ->
         if (wishList == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -97,7 +97,6 @@ fun DetailScreen(
         }
     }
 
-    // Dialog Edit Wishlist
     if (showEditWishlistDialog && wishList != null) {
         DialogEditWishlist(
             initialName = wishList.name,
@@ -110,7 +109,6 @@ fun DetailScreen(
         )
     }
 
-    // Dialog Delete Wishlist
     if (showDeleteWishlistDialog && wishList != null) {
         DialogDeleteWishlist(
             onDismiss = { showDeleteWishlistDialog = false },
@@ -122,13 +120,12 @@ fun DetailScreen(
         )
     }
 
-    // Dialog Tambah Riwayat
     if (showAddDialog && wishList != null) {
         DialogTambahRiwayat(
             onDismiss = { showAddDialog = false },
             onConfirm = { nominal, isPenambahan ->
                 if (!isPenambahan && nominal > calculatedCurrentAmount) {
-                    Toast.makeText(context, "Pengurangan melebihi saldo!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.reduction_exceeds_balance), Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.addHistoryItem(wishList.id, nominal, isPenambahan)
                     showAddDialog = false
@@ -138,7 +135,6 @@ fun DetailScreen(
         )
     }
 
-    // Dialog Detail Riwayat
     if (showDetailDialog && selectedHistoryItem != null) {
         DialogRiwayat(
             historyItem = selectedHistoryItem!!,
@@ -155,7 +151,6 @@ fun DetailScreen(
         )
     }
 
-    // Dialog Edit Riwayat
     if (showEditHistoryDialog && selectedHistoryItem != null) {
         DialogTambahRiwayat(
             initialNominal = selectedHistoryItem!!.nominal.toString(),
@@ -163,9 +158,9 @@ fun DetailScreen(
             onDismiss = { showEditHistoryDialog = false },
             onConfirm = { nominal, isPenambahan ->
                 if (!isPenambahan && nominal > wishList!!.currentAmount) {
-                    Toast.makeText(context, "Tidak bisa mengurangi lebih dari saldo!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.reduction_exceeds_balance), Toast.LENGTH_SHORT).show()
                 } else if (nominal <= 0) {
-                    Toast.makeText(context, "Nominal harus lebih dari 0!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.nominal_must_be_positive), Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.editHistoryItem(selectedHistoryItem!!, nominal, isPenambahan)
                     showEditHistoryDialog = false
@@ -204,11 +199,11 @@ fun DetailScreenContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     val progress = (wishList.currentAmount.toFloat() / wishList.targetAmount).coerceIn(0f, 1f)
-                    Text("Target: ${formatRupiah(wishList.targetAmount)}")
-                    Text("Progress: ${(progress * 100).toInt()}%")
+                    Text(stringResource(R.string.target, formatRupiah(wishList.targetAmount)))
+                    Text(stringResource(R.string.progress, (progress * 100).toInt()))
                     LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(8.dp))
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Tanggal Dibuat: ${wishList.createdAt}")
+                    Text(stringResource(R.string.created_at, wishList.createdAt))
                 }
             }
         }
@@ -220,13 +215,19 @@ fun DetailScreenContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column { Text("Terkumpul"); Text(formatRupiah(wishList.currentAmount), fontWeight = FontWeight.Bold) }
-                        Column(horizontalAlignment = Alignment.End) { Text("Kekurangan"); Text(formatRupiah(wishList.targetAmount - wishList.currentAmount), fontWeight = FontWeight.Bold) }
+                        Column {
+                            Text(stringResource(R.string.collected))
+                            Text(formatRupiah(wishList.currentAmount), fontWeight = FontWeight.Bold)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(stringResource(R.string.shortage))
+                            Text(formatRupiah(wishList.targetAmount - wishList.currentAmount), fontWeight = FontWeight.Bold)
+                        }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
                     if (histories.isNotEmpty()) {
-                        Text("Riwayat Tabungan")
+                        Text(stringResource(R.string.saving_history))
                         Spacer(modifier = Modifier.height(8.dp))
                         histories.forEachIndexed { index, item ->
                             HistoryItem(historyItem = item, onClick = { onHistoryItemClick(item) })
@@ -236,7 +237,7 @@ fun DetailScreenContent(
                         }
                     } else {
                         Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            Text("Belum ada riwayat tabungan", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.no_saving_history), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -256,7 +257,11 @@ fun HistoryItem(historyItem: TabunganHistory, onClick: () -> Unit) {
     ) {
         Column {
             Text(historyItem.tanggal, style = MaterialTheme.typography.bodySmall)
-            Text(if (historyItem.isPenambahan) "Penambahan" else "Pengurangan", color = color, style = MaterialTheme.typography.labelSmall)
+            Text(
+                if (historyItem.isPenambahan) stringResource(R.string.addition) else stringResource(R.string.reduction),
+                color = color,
+                style = MaterialTheme.typography.labelSmall
+            )
         }
         Text("$sign ${formatRupiah(historyItem.nominal)}", color = color, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
     }
@@ -265,7 +270,6 @@ fun HistoryItem(historyItem: TabunganHistory, onClick: () -> Unit) {
 fun formatRupiah(amount: Int): String {
     return "Rp %,d".format(amount).replace(',', '.')
 }
-
 
 @Preview(showBackground = true)
 @Composable

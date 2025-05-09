@@ -13,11 +13,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.marcello0140.tabungin.R
 import com.marcello0140.tabungin.model.WishList
 import com.marcello0140.tabungin.model.WishListWithHistory
 import com.marcello0140.tabungin.navigation.Screen
@@ -39,12 +41,14 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("TabungIn") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = { themeViewModel.toggleTheme() }) {
                         Icon(
                             imageVector = if (isDarkMode) Icons.Default.WbSunny else Icons.Default.NightsStay,
-                            contentDescription = if (isDarkMode) "Switch to Light Mode" else "Switch to Dark Mode"
+                            contentDescription = if (isDarkMode)
+                                stringResource(R.string.switch_to_light)
+                            else stringResource(R.string.switch_to_dark)
                         )
                     }
                 }
@@ -56,9 +60,9 @@ fun MainScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Tambah Wishlist")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_wishlist))
                     Spacer(Modifier.width(6.dp))
-                    Text("Tambah Wishlist")
+                    Text(stringResource(R.string.add_wishlist))
                 }
             }
         }
@@ -91,7 +95,10 @@ fun MainScreenContent(
     wishListWithHistory: List<WishListWithHistory>
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabTitles = listOf("Belum Tercapai", "Tercapai")
+    val tabTitles = listOf(
+        stringResource(R.string.tab_not_reached),
+        stringResource(R.string.tab_reached)
+    )
 
     Column(modifier = modifier.padding(16.dp)) {
         TabRow(selectedTabIndex = selectedTabIndex) {
@@ -126,12 +133,12 @@ fun MainScreenContent(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = Icons.Outlined.SentimentDissatisfied,
-                        contentDescription = "Empty",
+                        contentDescription = stringResource(R.string.empty),
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Belum ada wishlist", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.no_wishlist), style = MaterialTheme.typography.bodyMedium)
                 }
             }
         } else {
@@ -172,7 +179,7 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge)
-                Text("Rp ${item.targetAmount}", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.currency_amount, item.targetAmount), style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
@@ -181,7 +188,7 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "$percentage% terkumpul (Rp ${item.currentAmount})",
+                stringResource(R.string.percentage_collected, percentage, item.currentAmount),
                 style = MaterialTheme.typography.labelSmall
             )
         }
