@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -30,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marcello0140.tabungin.model.TabunganHistory
@@ -55,7 +58,10 @@ fun DialogTambahWishlist(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Nama Wishlist") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -64,7 +70,11 @@ fun DialogTambahWishlist(
                         if (it.all { c -> c.isDigit() }) targetAmount = it
                     },
                     label = { Text("Target Tabungan") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    )
                 )
             }
         },
@@ -105,15 +115,20 @@ fun DialogEditWishlist(
                 // Input nama wishlist
                 OutlinedTextField(
                     value = name,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
                     onValueChange = { name = it },
                     label = { Text("Nama Wishlist") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Input target amount (angka)
                 OutlinedTextField(
                     value = targetAmount,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
                     onValueChange = {
                         if (it.all { c -> c.isDigit() }) targetAmount = it
                     },
@@ -185,9 +200,12 @@ fun DialogTambahRiwayat(
         title = { Text("Tambah / Edit Catatan Tabungan") },
         text = {
             Column {
-                // Input nominal angka
                 OutlinedTextField(
                     value = nominal,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
                     onValueChange = {
                         if (it.all { c -> c.isDigit() }) nominal = it
                     },
@@ -196,8 +214,6 @@ fun DialogTambahRiwayat(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Pilihan penambahan/pengurangan (segmented button)
                 SegmentedButton(
                     selected = isPenambahan,
                     onSelectedChange = { isPenambahan = it }
@@ -306,16 +322,14 @@ fun formatDateToReadable(dateString: String): String {
 @Composable
 fun PreviewDialogTambahCatatan() {
     var showDialog by remember { mutableStateOf(true) }
-    val currentAmount by remember { mutableIntStateOf(100000) } // Contoh currentAmount
+    val currentAmount by remember { mutableIntStateOf(100000) }
 
     if (showDialog) {
         DialogTambahRiwayat(
             onDismiss = { showDialog = false },
             onConfirm = { nominal, isPenambahan ->
-                // Handle confirm logic here
-                // Misalnya, update tabungan history atau state
                 println("Nominal: $nominal, Penambahan: $isPenambahan")
-                showDialog = false // Menutup dialog setelah konfirmasi
+                showDialog = false
             },
             currentAmount = currentAmount
         )
@@ -327,22 +341,3 @@ fun PreviewDialogTambahCatatan() {
 fun Preview() {
     PreviewDialogTambahCatatan()
 }
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewDialogCatatan() {
-//    MaterialTheme {
-//        DialogRiwayat (
-//            historyItem = TabunganHistory(
-//                id = 1,
-//                nominal = 50000,
-//                isPenambahan = true,
-//                tanggal = "2025-05-08 10:45:00"
-//            ),
-//            onDismiss = {},
-//            onEdit = { println("Edit clicked") },
-//            onDelete = { println("Delete clicked") }
-//        )
-//    }
-//}

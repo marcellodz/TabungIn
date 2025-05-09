@@ -52,7 +52,14 @@ fun MainScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Tabungan")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Tambah Wishlist")
+                    Spacer(Modifier.width(6.dp))
+                    Text("Tambah Wishlist")
+                }
             }
         }
     ) { innerPadding ->
@@ -68,8 +75,9 @@ fun MainScreen(
             onDismiss = { showAddDialog = false },
             onConfirm = { name, targetAmount ->
                 viewModel.viewModelScope.launch {
-                    viewModel.addWishlist(name, targetAmount)
+                    val newId = viewModel.addWishlist(name, targetAmount)
                     showAddDialog = false
+                    navController.navigate(Screen.Detail.navigationWithId(newId.toInt()))
                 }
             }
         )
@@ -96,7 +104,7 @@ fun MainScreenContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp)) // Spacer tambahan agar tidak mepet
+        Spacer(modifier = Modifier.height(12.dp))
 
         val filteredList = if (selectedTabIndex == 0) {
             wishListWithHistory.filter {
@@ -182,7 +190,7 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewMainScreen() {
+fun PreviewMainScreenContent() {
     val dummyWishLists = listOf(
         WishListWithHistory(
             wishList = WishList(

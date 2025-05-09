@@ -14,14 +14,13 @@ class MainViewModel(
     private val repository: WishListRepository
 ) : ViewModel() {
 
-    // Collect Room flow into StateFlow (auto recomposition)
     val wishListWithHistory: StateFlow<List<WishListWithHistory>> =
         repository.getAllWishLists()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    suspend fun addWishlist(name: String, targetAmount: Int) {
+    suspend fun addWishlist(name: String, targetAmount: Int): Long {
         val createdAt = getTodayDate()
-        repository.addWishList(name, targetAmount, createdAt)
+        return repository.addWishList(name, targetAmount, createdAt)
     }
 
     private fun getTodayDate(): String {

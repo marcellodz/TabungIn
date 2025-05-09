@@ -34,7 +34,6 @@ fun DetailScreen(
     val wishList = data?.wishList
     val histories = data?.histories ?: emptyList()
 
-    // Hitung ulang currentAmount secara dinamis
     val calculatedCurrentAmount = histories.filter { it.isPenambahan }.sumOf { it.nominal } -
             histories.filter { !it.isPenambahan }.sumOf { it.nominal }
 
@@ -69,10 +68,17 @@ fun DetailScreen(
         floatingActionButton = {
             if (wishList != null) {
                 FloatingActionButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Tambah Catatan")
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Tambah Catatan")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Tambah Tabungan")
+                    }
                 }
             }
         }
+
     ) { innerPadding ->
         if (wishList == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
