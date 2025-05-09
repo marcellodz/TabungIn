@@ -20,7 +20,7 @@ import com.marcello0140.tabungin.util.ViewModelFactory
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    repository: WishListRepository, // DI-berikan dari MainActivity
+    repository: WishListRepository,
     preferenceManager: PreferenceManager
 ) {
     NavHost(
@@ -39,7 +39,6 @@ fun NavGraph(
         }
 
 
-        // Detail Screen
         composable(
             route = Screen.Detail.route,
             arguments = listOf(navArgument("id") { type = NavType.LongType })
@@ -48,7 +47,6 @@ fun NavGraph(
 
             val detailViewModel: DetailViewModel = viewModel(factory = ViewModelFactory(repository, preferenceManager))
 
-            // Load data saat ID diterima
             LaunchedEffect(id) {
                 detailViewModel.loadWishListById(id)
             }

@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
 )
 data class TabunganHistory(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
-    val wishListId: Long,  // foreign key yang menghubungkan ke WishList
+    val wishListId: Long,
     val tanggal: String,
     val nominal: Int,
     val isPenambahan: Boolean

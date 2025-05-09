@@ -45,7 +45,8 @@ fun MainScreen(
                 actions = {
                     IconButton(onClick = { themeViewModel.toggleTheme() }) {
                         Icon(
-                            imageVector = if (isDarkMode) Icons.Default.WbSunny else Icons.Default.NightsStay,
+                            imageVector = if (isDarkMode) Icons.Default.WbSunny
+                                            else Icons.Default.NightsStay,
                             contentDescription = if (isDarkMode)
                                 stringResource(R.string.switch_to_light)
                             else stringResource(R.string.switch_to_dark)
@@ -60,7 +61,8 @@ fun MainScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_wishlist))
+                    Icon(Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_wishlist))
                     Spacer(Modifier.width(6.dp))
                     Text(stringResource(R.string.add_wishlist))
                 }
@@ -115,12 +117,14 @@ fun MainScreenContent(
 
         val filteredList = if (selectedTabIndex == 0) {
             wishListWithHistory.filter {
-                val totalAmount = it.histories.sumOf { h -> if (h.isPenambahan) h.nominal else -h.nominal }
+                val totalAmount = it.histories.sumOf { h ->
+                    if (h.isPenambahan) h.nominal else -h.nominal }
                 totalAmount < it.wishList.targetAmount
             }
         } else {
             wishListWithHistory.filter {
-                val totalAmount = it.histories.sumOf { h -> if (h.isPenambahan) h.nominal else -h.nominal }
+                val totalAmount = it.histories.sumOf { h ->
+                    if (h.isPenambahan) h.nominal else -h.nominal }
                 totalAmount >= it.wishList.targetAmount
             }
         }
@@ -138,7 +142,8 @@ fun MainScreenContent(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(stringResource(R.string.no_wishlist), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.no_wishlist),
+                        style = MaterialTheme.typography.bodyMedium)
                 }
             }
         } else {
@@ -148,7 +153,8 @@ fun MainScreenContent(
             ) {
                 items(filteredList.size) { index ->
                     val item = filteredList[index]
-                    val calculatedAmount = item.histories.sumOf { h -> if (h.isPenambahan) h.nominal else -h.nominal }
+                    val calculatedAmount = item.histories.sumOf { h ->
+                        if (h.isPenambahan) h.nominal else -h.nominal }
                     WishListItem(
                         item = item.wishList.copy(currentAmount = calculatedAmount),
                         onClick = {
@@ -179,7 +185,8 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.currency_amount, item.targetAmount), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.currency_amount, item.targetAmount),
+                    style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(

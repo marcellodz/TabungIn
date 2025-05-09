@@ -50,16 +50,19 @@ fun DetailScreen(
                 title = { Text(wishList?.name ?: stringResource(R.string.loading)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     if (wishList != null) {
                         IconButton(onClick = { showEditWishlistDialog = true }) {
-                            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_wishlist))
+                            Icon(Icons.Filled.Edit,
+                                contentDescription = stringResource(R.string.edit_wishlist))
                         }
                         IconButton(onClick = { showDeleteWishlistDialog = true }) {
-                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete_wishlist))
+                            Icon(Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete_wishlist))
                         }
                     }
                 }
@@ -72,7 +75,8 @@ fun DetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 12.dp)
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_saving))
+                        Icon(Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.add_saving))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.add_saving))
                     }
@@ -125,7 +129,8 @@ fun DetailScreen(
             onDismiss = { showAddDialog = false },
             onConfirm = { nominal, isPenambahan ->
                 if (!isPenambahan && nominal > calculatedCurrentAmount) {
-                    Toast.makeText(context, context.getString(R.string.reduction_exceeds_balance), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.reduction_exceeds_balance),
+                        Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.addHistoryItem(wishList.id, nominal, isPenambahan)
                     showAddDialog = false
@@ -158,9 +163,11 @@ fun DetailScreen(
             onDismiss = { showEditHistoryDialog = false },
             onConfirm = { nominal, isPenambahan ->
                 if (!isPenambahan && nominal > wishList!!.currentAmount) {
-                    Toast.makeText(context, context.getString(R.string.reduction_exceeds_balance), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.reduction_exceeds_balance),
+                        Toast.LENGTH_SHORT).show()
                 } else if (nominal <= 0) {
-                    Toast.makeText(context, context.getString(R.string.nominal_must_be_positive), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.nominal_must_be_positive),
+                        Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.editHistoryItem(selectedHistoryItem!!, nominal, isPenambahan)
                     showEditHistoryDialog = false
@@ -214,14 +221,16 @@ fun DetailScreenContent(
                 elevation = CardDefaults.elevatedCardElevation(4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
                             Text(stringResource(R.string.collected))
                             Text(formatRupiah(wishList.currentAmount), fontWeight = FontWeight.Bold)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(stringResource(R.string.shortage))
-                            Text(formatRupiah(wishList.targetAmount - wishList.currentAmount), fontWeight = FontWeight.Bold)
+                            Text(formatRupiah(wishList.targetAmount - wishList.currentAmount),
+                                fontWeight = FontWeight.Bold)
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -236,8 +245,10 @@ fun DetailScreenContent(
                             }
                         }
                     } else {
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                            Text(stringResource(R.string.no_saving_history), style = MaterialTheme.typography.bodySmall)
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            contentAlignment = Alignment.Center) {
+                            Text(stringResource(R.string.no_saving_history),
+                                style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -258,12 +269,14 @@ fun HistoryItem(historyItem: TabunganHistory, onClick: () -> Unit) {
         Column {
             Text(historyItem.tanggal, style = MaterialTheme.typography.bodySmall)
             Text(
-                if (historyItem.isPenambahan) stringResource(R.string.addition) else stringResource(R.string.reduction),
+                if (historyItem.isPenambahan) stringResource(R.string.addition)
+                else stringResource(R.string.reduction),
                 color = color,
                 style = MaterialTheme.typography.labelSmall
             )
         }
-        Text("$sign ${formatRupiah(historyItem.nominal)}", color = color, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        Text("$sign ${formatRupiah(historyItem.nominal)}", color = color,
+            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 
