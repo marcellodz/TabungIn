@@ -20,6 +20,15 @@ interface WishListDao {
 
     @Transaction
     @Query("SELECT * FROM wish_list WHERE id = :id")
+    fun getWishListWithHistoryFlow(id: Long): Flow<WishListWithHistory?>
+
+    @Transaction
+    @Query("SELECT * FROM wish_list WHERE id = :id")
+    suspend fun getWishListWithHistoryOnce(id: Long): WishListWithHistory?
+
+
+    @Transaction
+    @Query("SELECT * FROM wish_list WHERE id = :id")
     fun getWishListWithHistoryById(id: Long): Flow<WishListWithHistory?>
 
     @Insert

@@ -211,7 +211,7 @@ fun DialogTambahRiwayat(
                     nominalValue <= 0 -> {
                         Toast.makeText(context, "Nominal harus lebih besar dari 0", Toast.LENGTH_SHORT).show()
                     }
-                    !isPenambahan && nominalValue > currentAmount -> {
+                    !isPenambahan && nominalValue >= currentAmount +1 -> {
                         Toast.makeText(context, "Pengurangan tidak boleh lebih besar dari jumlah tabungan", Toast.LENGTH_SHORT).show()
                     }
                     else -> {

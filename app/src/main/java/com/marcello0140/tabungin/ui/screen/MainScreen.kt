@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.marcello0140.tabungin.model.WishList
@@ -20,16 +20,16 @@ import com.marcello0140.tabungin.model.WishListWithHistory
 import com.marcello0140.tabungin.navigation.Screen
 import com.marcello0140.tabungin.ui.components.DialogTambahWishlist
 import com.marcello0140.tabungin.ui.viewmodel.MainViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    viewModel: MainViewModel = viewModel()
+    viewModel: MainViewModel
 ) {
-    val wishLists by viewModel.wishListWithHistories.collectAsState()
+    val wishLists by viewModel.wishListWithHistory.collectAsState()
+
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -51,8 +51,10 @@ fun MainScreen(
         DialogTambahWishlist(
             onDismiss = { showAddDialog = false },
             onConfirm = { name, targetAmount ->
-                viewModel.addWishlist(name, targetAmount, getTodayDate())
-                showAddDialog = false
+                viewModel.viewModelScope.launch {
+                    viewModel.addWishlist(name, targetAmount)
+                    showAddDialog = false
+                }
             }
         )
     }
@@ -68,7 +70,6 @@ fun MainScreenContent(
     val tabTitles = listOf("Belum Tercapai", "Tercapai")
 
     Column(modifier = modifier.padding(16.dp)) {
-        // Tab Bar
         TabRow(selectedTabIndex = selectedTabIndex) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -78,13 +79,19 @@ fun MainScreenContent(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // Filter list sesuai tab
+        Spacer(modifier = Modifier.height(12.dp)) // Spacer tambahan agar tidak mepet
+
         val filteredList = if (selectedTabIndex == 0) {
-            wishListWithHistory.filter { it.wishList.currentAmount < it.wishList.targetAmount }
+            wishListWithHistory.filter {
+                val totalAmount = it.histories.sumOf { h -> if (h.isPenambahan) h.nominal else -h.nominal }
+                totalAmount < it.wishList.targetAmount
+            }
         } else {
-            wishListWithHistory.filter { it.wishList.currentAmount >= it.wishList.targetAmount }
+            wishListWithHistory.filter {
+                val totalAmount = it.histories.sumOf { h -> if (h.isPenambahan) h.nominal else -h.nominal }
+                totalAmount >= it.wishList.targetAmount
+            }
         }
 
         if (filteredList.isEmpty()) {
@@ -109,10 +116,12 @@ fun MainScreenContent(
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredList.size) { index ->
+                    val item = filteredList[index]
+                    val calculatedAmount = item.histories.sumOf { h -> if (h.isPenambahan) h.nominal else -h.nominal }
                     WishListItem(
-                        item = filteredList[index].wishList,  // Ambil WishList dari WithHistory
+                        item = item.wishList.copy(currentAmount = calculatedAmount),
                         onClick = {
-                            navController.navigate(Screen.Detail.navigationWithId(filteredList[index].wishList.id))
+                            navController.navigate(Screen.Detail.navigationWithId(item.wishList.id.toInt()))
                         }
                     )
                 }
@@ -155,12 +164,24 @@ fun WishListItem(item: WishList, onClick: () -> Unit) {
     }
 }
 
-fun getTodayDate(): String {
-    return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-}
-
 @Preview(showBackground = true)
 @Composable
 fun PreviewMainScreen() {
-    MainScreen(navController = rememberNavController())
+    val dummyWishLists = listOf(
+        WishListWithHistory(
+            wishList = WishList(
+                id = 1L,
+                name = "Dummy Wish",
+                targetAmount = 1000000,
+                currentAmount = 500000,
+                createdAt = "2025-05-10"
+            ),
+            histories = listOf()
+        )
+    )
+
+    MainScreenContent(
+        navController = rememberNavController(),
+        wishListWithHistory = dummyWishLists
+    )
 }
